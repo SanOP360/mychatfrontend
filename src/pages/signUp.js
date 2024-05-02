@@ -1,11 +1,11 @@
 import React, { useState } from "react";
-import "./signUp.css"; 
+import "./signUp.css";
 
 const SignUp = () => {
   const [formData, setFormData] = useState({
     name: "",
     email: "",
-    phone: "",
+    phoneNo: "", 
     password: "",
   });
 
@@ -13,9 +13,30 @@ const SignUp = () => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log(formData);
+    try {
+      const response = await fetch("http://localhost:5000/users/signup", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(formData),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        console.log(data.message);
+        
+      } else {
+        console.error(data.message);
+        
+      }
+    } catch (error) {
+      console.error("Error signing up:", error.message);
+      
+    }
   };
 
   return (
@@ -49,8 +70,8 @@ const SignUp = () => {
           <input
             type="tel"
             id="phone"
-            name="phone"
-            value={formData.phone}
+            name="phoneNo" 
+            value={formData.phoneNo}
             onChange={handleChange}
             required
           />

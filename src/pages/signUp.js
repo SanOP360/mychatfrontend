@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import "./signUp.css";
+import { useNavigate } from "react-router-dom";
 
 const SignUp = () => {
   const [formData, setFormData] = useState({
@@ -8,6 +9,8 @@ const SignUp = () => {
     phoneNo: "", 
     password: "",
   });
+
+  const Navigate= useNavigate();
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -28,6 +31,8 @@ const SignUp = () => {
 
       if (response.ok) {
         console.log(data.message);
+
+        Navigate('/');
         
       } else {
         console.error(data.message);
@@ -38,7 +43,6 @@ const SignUp = () => {
       
     }
   };
-
   return (
     <div className="container">
       <h2>Sign Up for ChatApp</h2>

@@ -24,9 +24,10 @@
       console.log("Form submitted:", formData);
 
       axios
-        .post("http://localhost:5000/users/login", formData) // Specify the correct address
+        .post("http://localhost:5000/users/login", formData) 
         .then((response) => {
           console.log(response.data); 
+          localStorage.setItem("chattoken",response.data.token);
           Navigate('/chat')
         })
         .catch((error) => console.error("Error:", error));

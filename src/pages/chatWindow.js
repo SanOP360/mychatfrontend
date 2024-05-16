@@ -1,43 +1,47 @@
+
 import React, { useState, useEffect } from "react";
+import axios from "axios";
 import "./chatWindow.css";
 
 const ChatWindow = ({ currentUser }) => {
   const [message, setMessage] = useState("");
   const [messages, setMessages] = useState([]);
 
-  
-  const sendMessage = async () => {
-    try {
-      const response = await fetch("http://localhost:5000/chat/message", {
-        method: "POST",
+const sendMessage = async () => {
+  try {
+    const response = await axios.post(
+      "http://localhost:5000/chat/message",
+      { message },
+      {
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${localStorage.getItem("chattoken")}`, 
+          Authorization: `Bearer ${localStorage.getItem("chattoken")}`,
         },
-        body: JSON.stringify({
-          message,
-        }),
-      });
-      if (response.ok) {
-        console.log("Message sent successfully");
-        
-        setMessages([...messages, { message, sender: currentUser }]);
-        setMessage(""); // Clear the input field
-      } else {
-        console.error("Failed to send message");
       }
-    } catch (error) {
-      console.error("Error sending message:", error);
+    );
+    if (response.status === 200) {
+      console.log("Message sent successfully");
+      setMessages([...messages, { message, sender: currentUser }]);
+       setTimeout(() => {
+         setMessage(""); // Clear the input field after a short delay
+       }, 100);// Clear the input field
+    } else {
+      console.error("Failed to send message");
     }
-  };
-
+  } catch (error) {
+    console.error("Error sending message:", error);
+  }
+};
 
   const fetchMessages = async () => {
     try {
-      const response = await fetch("http://localhost:5000/chat/message");
-      if (response.ok) {
-        const data = await response.json();
-        setMessages(data.messages);
+      const response = await axios.get("http://localhost:5000/chat/message", {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("chattoken")}`, 
+        },
+      });
+      if (response.status === 200) {
+        setMessages(response.data.messages);
       } else {
         console.error("Failed to fetch messages");
       }
@@ -46,9 +50,10 @@ const ChatWindow = ({ currentUser }) => {
     }
   };
 
-  // Fetch messages when the component mounts
   useEffect(() => {
     fetchMessages();
+    const interval = setInterval(fetchMessages, 5000);
+    return () => clearInterval(interval);
   }, []);
 
   return (

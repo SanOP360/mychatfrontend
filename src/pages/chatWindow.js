@@ -7,41 +7,35 @@ const ChatWindow = ({ currentUser }) => {
   const [message, setMessage] = useState("");
   const [messages, setMessages] = useState([]);
 
-const sendMessage = async () => {
-  try {
-    const response = await axios.post(
-      "http://localhost:5000/chat/message",
-      { message },
-      {
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${localStorage.getItem("chattoken")}`,
-        },
-      }
-    );
-    if (response.status === 200) {
-      console.log("Message sent successfully");
-      setMessages([...messages, { message, sender: currentUser }]);
-       setTimeout(() => {
-         setMessage(""); // Clear the input field after a short delay
-       }, 100);// Clear the input field
-    } else {
-      console.error("Failed to send message");
-    }
-  } catch (error) {
-    console.error("Error sending message:", error);
-  }
-};
+  const saveMessagesToLocal = (messages) => {
+    localStorage.setItem("chatMessages", JSON.stringify(messages));
+  };
 
+  const getMessagesFromLocal = () => {
+    const storedMessages = localStorage.getItem("chatMessages");
+    return storedMessages ? JSON.parse(storedMessages) : [];
+  };
+
+  
   const fetchMessages = async () => {
     try {
+      const token = localStorage.getItem("chattoken");
+      if (!token) {
+        console.error("No JWT token available");
+        return;
+      }
+
       const response = await axios.get("http://localhost:5000/chat/message", {
         headers: {
-          Authorization: `Bearer ${localStorage.getItem("chattoken")}`, 
+          Authorization: `Bearer ${token}`,
         },
       });
       if (response.status === 200) {
-        setMessages(response.data.messages);
+        const newMessages = response.data.messages;
+        const storedMessages = getMessagesFromLocal();
+        const allMessages = [...storedMessages, ...newMessages].slice(-10); 
+        setMessages(allMessages);
+        saveMessagesToLocal(allMessages); 
       } else {
         console.error("Failed to fetch messages");
       }
@@ -50,12 +44,39 @@ const sendMessage = async () => {
     }
   };
 
-  useEffect(() => {
-    fetchMessages();
-    const interval = setInterval(fetchMessages, 5000);
-    return () => clearInterval(interval);
-  }, []);
+  
+  const sendMessage = async () => {
+    try {
+      const token = localStorage.getItem("chattoken");
+      if (!token) {
+        console.error("No JWT token available");
+        return;
+      }
 
+      const response = await axios.post(
+        "http://localhost:5000/chat/message",
+        { message },
+        {
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+      setMessage("")
+    } catch (error) {
+      console.error("Error sending message:", error);
+    }
+  };
+
+
+   useEffect(() => {
+     fetchMessages();
+     const interval = setInterval(fetchMessages, 1000);
+     return () => clearInterval(interval);
+   }, [fetchMessages]);
+
+  
   return (
     <div className="chat-window">
       <div className="header">
